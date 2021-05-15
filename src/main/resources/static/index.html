@@ -1,0 +1,61 @@
+<html>
+<head>
+
+</head>
+
+<body>
+
+<div style="width:100%; height: 100%;">
+    <div style="border: 1px black solid">
+        <div class="hidden" style="width: 100%; border: 1px solid black;">
+            Loader
+        </div>
+        <div style="width: 100%">
+            Glyph Grid
+        </div>
+        <div style="width: 100%">
+            <div id="glyph-grid" style="padding: 10px;">
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .card {
+            padding: 5px;
+            margin: 5px;
+            border: 2px black solid;
+        }
+
+    </style>
+
+    <script>
+        let selectedGlyph = "";
+
+        async function uploadedGlyphsRender() {
+            const response = await fetch("/glyphs/glyphs");
+            const glyphs = await response.json();
+            const holder = document.querySelector("#glyph-grid");
+
+            let index = 1;
+            holder.innerHTML = "";
+            glyphs.forEach(g => {
+                const card = document.createElement("span");
+                card.className = "glyph-card card";
+                card.innerText = g.unicode;
+                card.tabIndex = 0;
+                card.dataId = g.id;
+                card.onclick = function (e) {
+                    e.target.focus();
+                    selectedGlyph = e.target.innerText;
+                    redrawGraphemes();
+                };
+                holder.appendChild(card);
+            });
+        }
+
+    </script>
+</div>
+
+</body>
+
+</html>

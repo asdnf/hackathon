@@ -1,0 +1,198 @@
+<html>
+<head>
+
+</head>
+
+<body>
+
+<div style="width:100%; height: 100%;">
+    <div style="border: 1px black solid">
+        <div class="hidden" style="width: 100%; border: 1px solid black;">
+            Loader
+        </div>
+        <div style="width: 100%">
+            Glyph Grid
+        </div>
+        <div id="glyph-grid" style="padding: 10px;">
+        </div>
+        <div>
+            <div>Glyph upload</div>
+            <input id="glyph-code">
+            <button onclick="glyphUploadButtonListener()">Glyph upload</button>
+            <button id="delete-glyph" onclick="deleteGlyph()">Delete Glyph</button>
+        </div>
+        <div style="width: 100%">
+            Grapheme Grid
+        </div>
+        <div id="grapheme-grid" style="padding: 10px"></div>
+        <div style="width: 100%;">
+            <form action="/grapheme/graphemes" enctype="multipart/form-data" method="post">
+                <input id="grapheme-upload-glyph-id" name="glyphId" type="hidden">
+                <input id="grapheme-group-upload-glyph-id" name="groupId" type="text">
+                <input name="img-file" type="file">
+                <button onclick="putGrapheme()">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .grapheme-card, .glyph-card {
+            padding: 5px;
+            margin: 5px;
+            border: 2px black solid;
+            font-size: xx-large;
+        }
+
+        span:focus {
+            border: 2px blue solid;
+        }
+    </style>
+
+    <script>
+        let selectedGlyph = "";
+
+        async function uploadedGlyphsRender() {
+            const response = await fetch("/glyphs/glyphs");
+            const glyphs = await response.json();
+            const holder = document.querySelector("#glyph-grid");
+
+            let index = 1;
+            holder.innerHTML = "";
+            glyphs.forEach(g => {
+                const card = document.createElement("span");
+                card.className = "glyph-card card";
+                card.innerText = g.unicode;
+                card.tabIndex = 0;
+                card.dataId = g.id;
+                card.onclick = function (e) {
+                    e.target.focus();
+                    selectedGlyph = e.target.innerText;
+                    redrawGraphemes();
+                };
+                holder.appendChild(card);
+            });
+        }
+
+        uploadedGlyphsRender();
+
+        String.prototype.hexEncode = function hexEncode() {
+            var hex, i;
+
+            var result = "";
+            for (i = 0; i < this.length; i++) {
+                hex = this.charCodeAt(i).toString(16);
+                result += ("000" + hex).slice(-4);
+            }
+
+            return result
+        }
+
+        String.prototype.hexDecode = function () {
+            var j;
+            var hexes = this.match(/.{1,4}/g) || [];
+            var back = "";
+            for (j = 0; j < hexes.length; j++) {
+                back += String.fromCharCode(parseInt(hexes[j], 16));
+            }
+
+            return back;
+        }
+
+        async function glyphUploadButtonListener(e) {
+            const glyphCode = document.querySelector("#glyph-code").value
+
+            if (!glyphCode) {
+                e.preventDefault();
+            }
+
+            await fetch("/glyphs/glyph", {
+                method: "PUT",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: "",
+                    name: "",
+                    unicode: glyphCode.hexDecode(),
+                    graphemes: null
+                })
+            });
+
+            selectedGlyph = "";
+            uploadedGlyphsRender();
+        }
+
+        async function deleteGlyph() {
+            if (selectedGlyph === "") {
+                return;
+            }
+            let id = "";
+            const holder = document.querySelector("#glyph-grid");
+
+            holder.childNodes.forEach(card => {
+                if (selectedGlyph === card.innerText) {
+                    id = card.dataId;
+                }
+            });
+            await fetch("/glyphs/glyph", {
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    name: "",
+                    unicode: selectedGlyph,
+                    graphemes: null
+                })
+            });
+            uploadedGlyphsRender();
+        }
+
+        async function putGrapheme(e) {
+            if (selectedGlyph === "") {
+                e.preventDefault();
+                return;
+            }
+            let id = "";
+            const holder = document.querySelector("#glyph-grid");
+            const glyphIdInput = document.querySelector("#grapheme-upload-glyph-id");
+            holder.childNodes.forEach(card => {
+                if (selectedGlyph === card.innerText) {
+                    id = card.dataId;
+                    glyphIdInput.value = id;
+                }
+            });
+        }
+
+        async function redrawGraphemes() {
+            const grid = document.querySelector("#grapheme-grid");
+
+            let id = "";
+            const holder = document.querySelector("#glyph-grid");
+
+            holder.childNodes.forEach(card => {
+                if (selectedGlyph === card.innerText) {
+                    id = card.dataId;
+                }
+            });
+
+            const response = await fetch("/grapheme/graphemes?glyphId=" + id);
+            const graphemes = await response.json();
+            grid.innerHTML = "";
+            graphemes.forEach(gr => {
+                const card = document.createElement("span");
+                card.className = "grapheme-card card";
+                card.dataId = gr.id;
+                card.innerHTML = "<img src='data:image/png;base64, " + gr.base64Image + "'></img>";
+                grid.appendChild(card);
+            });
+        }
+
+
+    </script>
+</div>
+
+</body>
+
+</html>
