@@ -15,6 +15,7 @@
             </div>
             <div id="series" class="bordered">
             </div>
+            <button id="clear">CLear</button>
         </div>
     </div>
 
@@ -42,8 +43,8 @@
             background-color: aqua;
         }
 
-        .hidden {
-            display: none;
+        .disabled {
+            opacity: 0.5;
         }
     </style>
 
@@ -81,16 +82,51 @@
                 holder.appendChild(card);
 
                 card.onclick = function (e) {
+                    if (card.classList.contains("disabled")) {
+                        return;
+                    }
                     const seriesCard = document.createElement("span");
 
                     seriesCard.innerHTML = "<img src='data:image/png;base64, " + main.base64Image + "'></img>";
                     seriesCard.tabIndex = 0;
-                    seriesCard.dataGroupId = k;
+                    seriesCard.dataId = card.dataGroupId;
                     seriesCard.className = "grapheme-card";
                     series.appendChild(seriesCard);
+
+                    card.classList.add("disabled");
+
+                    const focusedGlyphs = [];
+                    const input = series.childNodes;
+                    for (let j in glyphs) {
+                        const glGraphemes = glyphs[j].graphemes;
+                        let found = false;
+                        for (let i in input) {
+                            const grInput = input[i];
+                            for (let k in glGraphemes) {
+
+                                if (glGraphemes[k].groupId == grInput.dataId) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (found) {
+                            focusedGlyphs.push(glyphs[j]);
+                        }
+                    }
+                    console.log(focusedGlyphs);
                 };
 
             }
+
+            const clear = document.querySelector("#clear");
+            clear.onclick = function () {
+                series.innerHTML = "";
+                const cards = holder.childNodes;
+                for (let i in cards) {
+                    if (typeof cards[i].classList !== 'undefined') cards[i].classList.remove("disabled");
+                }
+            };
         }
 
         uploadedGlyphsRender();
