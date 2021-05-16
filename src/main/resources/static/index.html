@@ -13,11 +13,16 @@
         <div style="width: 100%">
             <div id="glyph-grid" style="padding: 10px;">
             </div>
+            <div id="series" class="bordered">
+            </div>
         </div>
     </div>
 
     <style>
 
+        .bordered {
+            border: 2px black solid;
+        }
 
         .grapheme-card, .glyph-card {
             padding: 5px;
@@ -36,15 +41,22 @@
             height: 200px;
             background-color: aqua;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 
     <script>
         let selectedGlyph = "";
 
         async function uploadedGlyphsRender() {
-            const response = await fetch("/grapheme/graphemes");
+            let response = await fetch("/grapheme/graphemes");
             const graphemes = await response.json();
+            response = await fetch("/glyphs/glyphs");
+            const glyphs = await response.json();
             const holder = document.querySelector("#glyph-grid");
+            const series = document.querySelector("#series");
 
             let merged = {};
 
@@ -69,21 +81,13 @@
                 holder.appendChild(card);
 
                 card.onclick = function (e) {
-                    const holder = document.createElement("div");
-                    holder.className = "lense";
-                    holder.style = `left: ${e.clientX -50}px; top: ${e.clientY -50 }px`;
-                    holder.onmouseleave = function () {
-                        holder.remove();
-                    };
+                    const seriesCard = document.createElement("span");
 
-                    merged[this.dataGroupId].forEach(gr => {
-                        const subCard = document.createElement("span");
-                        subCard.tabIndex = 0;
-                        subCard.className = "grapheme-card";
-                        subCard.innerHTML = "<img src='data:image/png;base64, " + gr.base64Image + "'></img>";
-                        holder.appendChild(subCard);
-                    });
-                    document.body.appendChild(holder);
+                    seriesCard.innerHTML = "<img src='data:image/png;base64, " + main.base64Image + "'></img>";
+                    seriesCard.tabIndex = 0;
+                    seriesCard.dataGroupId = k;
+                    seriesCard.className = "grapheme-card";
+                    series.appendChild(seriesCard);
                 };
 
             }
