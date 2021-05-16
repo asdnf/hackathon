@@ -5,7 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.*;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Setter
@@ -20,6 +20,6 @@ public class Glyph {
     String unicode;
 
     @OneToMany(fetch = FetchType.LAZY)
-    Set<Grapheme> graphemes;
+    List<Grapheme> graphemes;
 
 }

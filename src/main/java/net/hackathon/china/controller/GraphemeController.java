@@ -15,7 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Controller
 @RequestMapping("/grapheme")
@@ -29,9 +31,15 @@ public class GraphemeController {
 
     @RequestMapping("/graphemes")
     @ResponseBody
-    public Collection<Grapheme> getGraphemes(@RequestParam("glyphId") Integer glyphId) {
-        Glyph glyph = glyphsRepository.getById(glyphId);
-        return glyph.getGraphemes();
+    public Collection<Grapheme> getGraphemes(@RequestParam(value = "glyphId", required = false) Integer glyphId) {
+        if (glyphId != null) {
+            Glyph glyph = glyphsRepository.getById(glyphId);
+            return glyph.getGraphemes();
+        } else {
+            List<Grapheme> list = new ArrayList<>();
+            graphemeRepository.findAll().forEach(list::add);
+            return list;
+        }
     }
 
     @RequestMapping(value = "/graphemes", method = RequestMethod.POST)
@@ -48,5 +56,6 @@ public class GraphemeController {
         graphemeRepository.save(grapheme);
         return new RedirectView("/upload.html");
     }
+
 
 }

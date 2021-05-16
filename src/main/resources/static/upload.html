@@ -28,8 +28,9 @@
         <div style="width: 100%;">
             <form action="/grapheme/graphemes" enctype="multipart/form-data" method="post">
                 <input id="grapheme-upload-glyph-id" name="glyphId" type="hidden">
-                <input id="grapheme-group-upload-glyph-id" name="groupId" type="text">
                 <input name="img-file" type="file">
+                <div>group id</div>
+                <input id="grapheme-group-upload-glyph-id" name="groupId" type="text">
                 <button onclick="putGrapheme()">Submit</button>
             </form>
         </div>

@@ -6,10 +6,7 @@
 <body>
 
 <div style="width:100%; height: 100%;">
-    <div style="border: 1px black solid">
-        <div class="hidden" style="width: 100%; border: 1px solid black;">
-            Loader
-        </div>
+    <div style="border: 1px black solid; left: 30%; top: 30%;">
         <div style="width: 100%">
             Glyph Grid
         </div>
@@ -20,38 +17,79 @@
     </div>
 
     <style>
-        .card {
+
+
+        .grapheme-card, .glyph-card {
             padding: 5px;
-            margin: 5px;
-            border: 2px black solid;
+            /*margin: 5px;*/
+            /*border: 2px black solid;*/
+            font-size: xx-large;
         }
 
+        span:focus {
+            border: 2px blue solid;
+        }
+
+        .lense {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background-color: aqua;
+        }
     </style>
 
     <script>
         let selectedGlyph = "";
 
         async function uploadedGlyphsRender() {
-            const response = await fetch("/glyphs/glyphs");
-            const glyphs = await response.json();
+            const response = await fetch("/grapheme/graphemes");
+            const graphemes = await response.json();
             const holder = document.querySelector("#glyph-grid");
 
-            let index = 1;
-            holder.innerHTML = "";
-            glyphs.forEach(g => {
-                const card = document.createElement("span");
-                card.className = "glyph-card card";
-                card.innerText = g.unicode;
-                card.tabIndex = 0;
-                card.dataId = g.id;
-                card.onclick = function (e) {
-                    e.target.focus();
-                    selectedGlyph = e.target.innerText;
-                    redrawGraphemes();
-                };
-                holder.appendChild(card);
+            let merged = {};
+
+            graphemes.forEach(g => {
+                const group = merged[g.groupId];
+                if (typeof group === "undefined") {
+                    merged[g.groupId] = [];
+                }
+                merged[g.groupId].push(g);
             });
+
+            holder.innerHTML = "";
+
+            for (const k in merged) {
+                const card = document.createElement("span");
+                const main = merged[k][0];
+
+                card.innerHTML = "<img src='data:image/png;base64, " + main.base64Image + "'></img>";
+                card.tabIndex = 0;
+                card.dataGroupId = k;
+                card.className = "grapheme-card";
+                holder.appendChild(card);
+
+                card.onclick = function (e) {
+                    const holder = document.createElement("div");
+                    holder.className = "lense";
+                    holder.style = `left: ${e.clientX -50}px; top: ${e.clientY -50 }px`;
+                    holder.onmouseleave = function () {
+                        holder.remove();
+                    };
+
+                    merged[this.dataGroupId].forEach(gr => {
+                        const subCard = document.createElement("span");
+                        subCard.tabIndex = 0;
+                        subCard.className = "grapheme-card";
+                        subCard.innerHTML = "<img src='data:image/png;base64, " + gr.base64Image + "'></img>";
+                        holder.appendChild(subCard);
+                    });
+                    document.body.appendChild(holder);
+                };
+
+            }
         }
+
+        uploadedGlyphsRender();
 
     </script>
 </div>
